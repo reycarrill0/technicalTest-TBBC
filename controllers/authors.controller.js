@@ -1,7 +1,7 @@
 const pool = require("../db");
 const schema = process.env.PG_SCHEMA
 
-
+// Controlador para crear autor
 const postCreateAuthor = async (req, res) => {
 
   const { code, name } = req.body;
