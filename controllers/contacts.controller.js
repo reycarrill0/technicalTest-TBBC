@@ -33,12 +33,13 @@ const getAll = async (req, res) => {
 
 // Controlador para crear contactos
 const postCreate = async (req, res) => {
+
   const { code, name, phone, email, author_id} = req.body;
   let query = {
     text: `INSERT INTO ${schema}.contacts
         (code, name, phone, email, status, author_id, creation_date)
         VALUES($1, $2, $3, $4 ,true, $5, CURRENT_TIMESTAMP);`,
-    values: [ code, name, phone, email, author_id],
+    values: [code, name, phone, email, author_id],
   };
 
   try {
@@ -134,10 +135,6 @@ const getByname = async (req, res ) => {
 
   const { name } = req.params 
 
-  if (!name) {
-    return res.status(400).json({ error: 'Debes proporcionar una parte del nombre para buscar' });
-  }
-
  let query = {
    text: `select c.code as "Codigo", c."name" as "NombreContacto", c.phone as "Telefono", c.email as "Correo", date(c.creation_date) as "FechaCreación", a.name as "Autor"
    from ${schema}.contacts as c 
@@ -169,11 +166,49 @@ const getByname = async (req, res ) => {
  }
 };
 
+//controlador para buscar contacto por author
+const getByauthor = async (req, res ) => {
+
+  const { name } = req.params 
+
+ let query = {
+   text: `select c.code as "Codigo", c."name" as "NombreContacto", c.phone as "Telefono", c.email as "Correo", date(c.creation_date) as "FechaCreación", a.name as "Autor"
+   from ${schema}.contacts as c 
+   left join ${schema}.author as a on (c.author_id=a.id)
+   where a.name ilike $1 and c.status = 'true'
+   order by c.id asc`,
+   values: [`%${name}%`]
+ };
+
+ try {
+   const datos = await pool.query(query);
+ 
+ if (datos.rows.length > 0) {
+   res.json({
+     status: "success",
+     data: datos.rows,
+   });
+   
+ }else {
+     res.json({
+       status: "error"
+     });
+   }
+   
+ } catch (error) {
+   res.json({
+     error: 'Error al consultar usuario'
+   })
+ }
+};
+
+
 
 module.exports = {
   getAll,
   postCreate,
   PutById,
   getByCode,
-  getByname
+  getByname,
+  getByauthor
 };
